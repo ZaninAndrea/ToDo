@@ -1,0 +1,19 @@
+.TodoForm{
+}
+
+.Todo{
+  
+}
+
+.TodoList{
+  list-style-type: none;
+}
+
+.Title{
+}
+.TodoApp{
+  width:250px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 20vh;
+}
