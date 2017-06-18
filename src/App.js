@@ -1,20 +1,16 @@
-import React, { Component } from 'react';
+import React from 'react';
 import axios from 'axios';
-import logo from './logo.svg';
 import './App.css';
 import 'antd/dist/antd.css';
-import { Checkbox, Input } from 'antd';
-import TodoForm from './components/TodoForm.js'
+import TodoForm from './components/TodoForm.js';
+import Todo from './components/Todo.js';
+import { LocaleProvider } from 'antd';
+import enUS from 'antd/lib/locale-provider/en_US';
 
-const Todo = ({todo, remove}) => {
-  // Each Todo
-  return (<li><Checkbox className="Todo" onChange={()=>remove(todo.id)}>{todo.text}</Checkbox></li>);
-}
-
-const TodoList = ({todos, remove}) => {
+const TodoList = ({todos, remove, editTodo}) => {
   // Map through the todos
   const todoNode = todos.map((todo) => {
-    return (<Todo todo={todo} key={todo.id} remove={remove}/>)
+    return (<Todo todo={todo} key={todo.id} remove={remove} editTodo={editTodo}/>)
   });
   return (<ul className="TodoList">{todoNode}</ul>);
 }
@@ -39,6 +35,9 @@ class TodoApp extends React.Component{
       data: []
     }
     this.apiUrl = 'http://59453f31cf46400011a8129d.mockapi.io/todo'
+    this.addTodo= this.addTodo.bind(this)
+    this.handleRemove = this.handleRemove.bind(this)
+    this.editTodo = this.editTodo.bind(this)
   }
   // Lifecycle method
   componentDidMount(){
@@ -50,9 +49,9 @@ class TodoApp extends React.Component{
       });
   }
   // Add todo handler
-  addTodo(val){
+  addTodo(val, due){
     // Assemble data
-    const todo = {text: val}
+    const todo = {text: val, due: due}
     // Update data
     axios.post(this.apiUrl, todo)
        .then((res) => {
@@ -60,6 +59,27 @@ class TodoApp extends React.Component{
           this.setState({data: this.state.data});
        });
   }
+
+  editTodo(val, due, id){
+    // Assemble data
+    const todo = {text: val, due: due}
+
+    // Update data
+    axios.put(this.apiUrl+'/'+id, todo)
+       .then((res) => {
+         // find and replace old todo
+          const updated = this.state.data.map((todo) => {
+            if(todo.id !== id){
+              return todo;
+            }
+            else{
+              return res.data
+            }
+          });
+          this.setState({data: updated});
+       });
+  }
+
   // Handle remove
   handleRemove(id){
     // Filter all todos except the one to be removed
@@ -69,21 +89,24 @@ class TodoApp extends React.Component{
     // Update state with filter
     axios.delete(this.apiUrl+'/'+id)
       .then((res) => {
-        this.setState({data: remainder});      
+        this.setState({data: remainder});
       })
   }
 
   render(){
     // Render JSX
     return (
-      <div className="TodoApp">
+      <LocaleProvider locale={enUS}>
+        <div className="TodoApp">
         <Title todoCount={this.state.data.length}/>
-        <TodoForm addTodo={this.addTodo.bind(this)}/>
-        <TodoList 
-          todos={this.state.data} 
-          remove={this.handleRemove.bind(this)}
+        <TodoForm addTodo={this.addTodo}/>
+        <TodoList
+          todos={this.state.data}
+          remove={this.handleRemove}
+          editTodo={this.editTodo}
         />
       </div>
+    </LocaleProvider>
     );
   }
 }
